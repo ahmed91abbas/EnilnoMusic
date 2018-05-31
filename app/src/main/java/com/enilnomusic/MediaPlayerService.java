@@ -126,6 +126,38 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 audioManager.abandonAudioFocus(this);
     }
 
+    //The system calls this method when an activity, requests the service be started
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            //An audio file is passed to the service through putExtra();
+            mediaFile = intent.getExtras().getString("media");
+        } catch (NullPointerException e) {
+            stopSelf();
+        }
+
+        //Request audio focus
+        if (!requestAudioFocus()) {
+            //Could not gain focus
+            stopSelf();
+        }
+
+        if (mediaFile != null && !mediaFile.equals(""))
+            initMediaPlayer();
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            stopMedia();
+            mediaPlayer.release();
+        }
+        removeAudioFocus();
+    }
+
     public class LocalBinder extends Binder {
         public MediaPlayerService getService() {
             return MediaPlayerService.this;
